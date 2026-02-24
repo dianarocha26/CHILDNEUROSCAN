@@ -3,27 +3,7 @@ import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    {
-      name: 'pwa-service-worker',
-      apply: 'build',
-      transformIndexHtml(html) {
-        return html.replace(
-          '</body>',
-          `<script>
-            if ('serviceWorker' in navigator) {
-              window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                  .then(reg => console.log('Service Worker registered'))
-                  .catch(err => console.log('Service Worker registration failed:', err));
-              });
-            }
-          </script></body>`
-        );
-      }
-    }
-  ],
+  plugins: [react()],
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
