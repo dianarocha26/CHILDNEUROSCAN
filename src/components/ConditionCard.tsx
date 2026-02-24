@@ -26,6 +26,15 @@ export function ConditionCard({ condition, onClick }: ConditionCardProps) {
   const displayName = language === 'es' ? condition.name_es : condition.name_en;
   const displayDescription = language === 'es' ? condition.description_es : condition.description_en;
 
+  console.log('🎴 ConditionCard rendering:', {
+    condition,
+    language,
+    displayName,
+    displayDescription,
+    hasName: !!displayName,
+    hasDescription: !!displayDescription
+  });
+
   return (
     <button
       onClick={onClick}
