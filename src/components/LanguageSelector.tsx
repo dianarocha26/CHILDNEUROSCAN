@@ -1,13 +1,33 @@
 import { Globe } from 'lucide-react';
+import { Language } from '../types';
 
-export function LanguageSelector() {
+interface LanguageSelectorProps {
+  currentLanguage: Language;
+  onLanguageChange: (language: Language) => void;
+}
+
+export function LanguageSelector({ currentLanguage, onLanguageChange }: LanguageSelectorProps) {
   return (
-    <div className="fixed top-6 right-6 flex items-center gap-3 z-50">
-      <Globe className="w-5 h-5 text-gray-600" />
-      <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200">
+    <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-soft">
+      <Globe className="w-5 h-5 text-blue-600" />
+      <button
+        onClick={() => onLanguageChange('en')}
+        className={'px-3 py-1 rounded-full transition-all duration-300 ' + (
+          currentLanguage === 'en'
+            ? 'bg-blue-600 text-white shadow-md'
+            : 'text-gray-600 hover:bg-blue-50'
+        )}
+      >
         EN
       </button>
-      <button className="px-4 py-2 bg-white text-gray-700 rounded-lg font-medium hover:shadow-md transition-all duration-200 border border-gray-200">
+      <button
+        onClick={() => onLanguageChange('es')}
+        className={'px-3 py-1 rounded-full transition-all duration-300 ' + (
+          currentLanguage === 'es'
+            ? 'bg-blue-600 text-white shadow-md'
+            : 'text-gray-600 hover:bg-blue-50'
+        )}
+      >
         ES
       </button>
     </div>
