@@ -152,6 +152,57 @@ npm run preview
 
 ---
 
+## 🔄 PROBLEMAS DE CACHE
+
+Si ves la version antigua de la aplicacion despues de hacer cambios:
+
+### En Desarrollo Local (localhost:5173)
+
+1. **Limpiar cache del navegador:**
+   ```bash
+   # Windows/Linux: Ctrl+Shift+Delete
+   # Mac: Cmd+Shift+Delete
+   # Selecciona: "Cached images and files"
+   ```
+
+2. **Hard Refresh:**
+   ```bash
+   # Windows/Linux: Ctrl+Shift+R
+   # Mac: Cmd+Shift+R
+   ```
+
+3. **Limpiar y reconstruir:**
+   ```bash
+   npm run build:clean
+   ```
+
+### En Vercel
+
+1. Ve a https://vercel.com/dashboard
+2. Encuentra tu proyecto "childneuroscan"
+3. Click en "Deployments"
+4. Click en el deployment mas reciente
+5. Click en los tres puntos "..." > "Redeploy"
+6. Marca "Use existing Build Cache" = OFF
+7. Click "Redeploy"
+
+### En Netlify
+
+1. Ve a https://app.netlify.com
+2. Encuentra tu proyecto "childneuroscan"
+3. Click en "Deploys"
+4. Click en "Trigger deploy" dropdown
+5. Selecciona "Clear cache and deploy site"
+
+### Script Automatico
+
+Ejecuta el script incluido:
+```bash
+./clear-cache.sh
+```
+
+---
+
 ## 📁 Project Structure
 
 ```
