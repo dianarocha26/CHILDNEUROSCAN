@@ -1,12 +1,16 @@
 {
-  "name": "ChildNeuroScan",
+  "name": "ChildNeuroScan - Desarrollo Infantil",
   "short_name": "ChildNeuroScan",
-  "description": "Comprehensive child development screening and tracking platform",
+  "description": "Plataforma completa de evaluación y seguimiento del desarrollo infantil. Screenings de Autismo, ADHD, Retrasos del Habla y más.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",
-  "orientation": "portrait-primary",
+  "orientation": "any",
+  "prefer_related_applications": false,
+  "lang": "es",
+  "dir": "ltr",
   "icons": [
     {
       "src": "/icon-72x72.png",
