@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Brain, MessageSquare, Zap, TrendingDown, BookOpen, Eye, Heart, Frown, MessageCircle, Baby, Book, Ear, Activity, AlertTriangle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { ScreeningQuestionnaire } from './ScreeningQuestionnaire';
 
 interface Condition {
   id: string;
@@ -32,6 +33,7 @@ export function ScreeningList() {
   const [conditions, setConditions] = useState<Condition[]>([]);
   const [loading, setLoading] = useState(true);
   const [language] = useState<'es' | 'en'>('es');
+  const [selectedCondition, setSelectedCondition] = useState<Condition | null>(null);
 
   useEffect(() => {
     loadConditions();
@@ -78,6 +80,20 @@ export function ScreeningList() {
     );
   }
 
+  if (selectedCondition) {
+    return (
+      <ScreeningQuestionnaire
+        conditionId={selectedCondition.id}
+        conditionName={selectedCondition.name}
+        onBack={() => setSelectedCondition(null)}
+        onComplete={() => {
+          setSelectedCondition(null);
+          alert('Evaluación completada con éxito');
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
@@ -94,6 +110,7 @@ export function ScreeningList() {
             return (
               <button
                 key={condition.id}
+                onClick={() => setSelectedCondition(condition)}
                 className="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl hover:shadow-md transition-all border border-blue-100 text-left group"
               >
                 <div className="flex items-start gap-4">

@@ -7,13 +7,15 @@ import {
   FileText,
   LogOut,
   Menu,
-  X
+  X,
+  BarChart3
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { ScreeningList } from './ScreeningList';
 import { ConditionsList } from './ConditionsList';
+import { ScreeningResults } from './ScreeningResults';
 
-type View = 'home' | 'screening' | 'conditions' | 'tracking';
+type View = 'home' | 'screening' | 'conditions' | 'results' | 'tracking';
 
 export function Dashboard() {
   const [currentView, setCurrentView] = useState<View>('home');
@@ -23,6 +25,7 @@ export function Dashboard() {
   const navigation = [
     { id: 'home', name: 'Inicio', icon: Home },
     { id: 'screening', name: 'Evaluaciones', icon: ClipboardList },
+    { id: 'results', name: 'Resultados', icon: BarChart3 },
     { id: 'conditions', name: 'Condiciones', icon: FileText },
     { id: 'tracking', name: 'Seguimiento', icon: TrendingUp },
   ];
@@ -158,6 +161,7 @@ export function Dashboard() {
         )}
 
         {currentView === 'screening' && <ScreeningList />}
+        {currentView === 'results' && <ScreeningResults />}
         {currentView === 'conditions' && <ConditionsList />}
         {currentView === 'tracking' && (
           <div className="space-y-6">
