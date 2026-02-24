@@ -3,6 +3,7 @@ import { Hero } from './components/Hero';
 import { Features } from './components/Features';
 import { VideoSection } from './components/VideoSection';
 import { LanguageSelector } from './components/LanguageSelector';
+import { InstallPrompt } from './components/InstallPrompt';
 import { Language, Translations } from './types';
 
 const translations: Record<Language, Translations> = {
@@ -84,6 +85,7 @@ function App() {
         <Features translations={t.features} />
         <VideoSection />
       </div>
+      <InstallPrompt />
     </div>
   );
 }
