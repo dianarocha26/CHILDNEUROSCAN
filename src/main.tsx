@@ -8,6 +8,10 @@ import { ThemeProvider } from './contexts/ThemeContext.tsx';
 import { LanguageProvider } from './contexts/LanguageContext.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { registerServiceWorker } from './lib/serviceWorker';
+import { supabase } from './lib/supabase';
+
+console.log('🚀 Main.tsx loaded');
+console.log('🔌 Supabase client:', supabase);
 
 registerServiceWorker();
 
