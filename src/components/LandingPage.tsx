@@ -44,21 +44,23 @@ export function LandingPage({ onConditionSelect, onViewDashboard, onViewResource
   }, []);
 
   async function loadConditions() {
-    console.log('=== loadConditions START ===');
+    console.log('🚀 === loadConditions START ===');
     try {
       setLoading(true);
-      console.log('About to call getConditions()...');
+      console.log('🚀 About to call getConditions()...');
       const data = await getConditions();
-      console.log('=== SUCCESS: Loaded conditions ===', data);
-      console.log('Number of conditions:', data?.length);
+      console.log('🚀 === SUCCESS: Loaded conditions ===', data);
+      console.log('🚀 Number of conditions:', data?.length);
+      console.log('🚀 First condition:', data?.[0]);
       setConditions(data);
+      console.log('🚀 State updated with conditions');
     } catch (err) {
-      console.error('=== ERROR loading conditions ===', err);
+      console.error('🚀 === ERROR loading conditions ===', err);
       setError(t('Failed to load conditions', 'Error al cargar las condiciones'));
       logger.error('Error loading conditions:', err);
     } finally {
       setLoading(false);
-      console.log('=== loadConditions END ===');
+      console.log('🚀 === loadConditions END ===');
     }
   }
 
@@ -442,10 +444,19 @@ export function LandingPage({ onConditionSelect, onViewDashboard, onViewResource
             <div className="grid gap-4">
               {conditions.length === 0 && (
                 <div className="text-center py-8 text-gray-600">
-                  No conditions found. Conditions array length: {conditions.length}
+                  🚨 No conditions found. Conditions array length: {conditions.length}
+                  <br />
+                  Conditions array: {JSON.stringify(conditions)}
                 </div>
               )}
-              {conditions.map((condition, index) => (
+              {conditions.length > 0 && (
+                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  ✅ Found {conditions.length} conditions
+                </div>
+              )}
+              {conditions.map((condition, index) => {
+                console.log('🗺️ Mapping condition:', condition);
+                return (
                 <div
                   key={condition.id}
                   className="animate-in"
@@ -456,7 +467,8 @@ export function LandingPage({ onConditionSelect, onViewDashboard, onViewResource
                     onClick={() => onConditionSelect(condition)}
                   />
                 </div>
-              ))}
+              );
+              })}
             </div>
           )}
         </div>
