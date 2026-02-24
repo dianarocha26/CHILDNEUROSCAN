@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Brain, MessageSquare, Zap, TrendingDown, BookOpen, Eye, Heart, Frown } from 'lucide-react';
+import { Brain, MessageSquare, Zap, TrendingDown, BookOpen, Eye, Heart, Frown, MessageCircle, Baby, Book, Ear, Activity, AlertTriangle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -8,23 +8,30 @@ interface Condition {
   name: string;
   description: string;
   icon: string;
+  color: string;
 }
 
 const iconMap: Record<string, any> = {
   brain: Brain,
-  message: MessageSquare,
+  'message-square': MessageSquare,
+  'message-circle': MessageCircle,
   zap: Zap,
-  trending: TrendingDown,
-  book: BookOpen,
+  'trending-down': TrendingDown,
+  'book-open': BookOpen,
+  book: Book,
+  baby: Baby,
   eye: Eye,
+  ear: Ear,
   heart: Heart,
   frown: Frown,
+  activity: Activity,
+  'alert-triangle': AlertTriangle,
 };
 
 export function ScreeningList() {
   const [conditions, setConditions] = useState<Condition[]>([]);
   const [loading, setLoading] = useState(true);
-  const { guestMode } = useAuth();
+  const [language] = useState<'es' | 'en'>('es');
 
   useEffect(() => {
     loadConditions();
@@ -32,26 +39,23 @@ export function ScreeningList() {
 
   const loadConditions = async () => {
     try {
-      if (guestMode) {
-        setConditions([
-          { id: '1', name: 'Autismo (TEA)', description: 'Trastorno del Espectro Autista - Evaluación completa', icon: 'brain' },
-          { id: '2', name: 'TDAH', description: 'Trastorno por Déficit de Atención e Hiperactividad', icon: 'zap' },
-          { id: '3', name: 'Retraso del Habla', description: 'Evaluación del desarrollo del lenguaje', icon: 'message' },
-          { id: '4', name: 'Retraso del Desarrollo', description: 'Evaluación general del desarrollo', icon: 'trending' },
-          { id: '5', name: 'Trastornos del Aprendizaje', description: 'Dificultades de aprendizaje específicas', icon: 'book' },
-          { id: '6', name: 'Procesamiento Sensorial', description: 'Dificultades de integración sensorial', icon: 'eye' },
-          { id: '7', name: 'Ansiedad', description: 'Trastornos de ansiedad infantil', icon: 'heart' },
-          { id: '8', name: 'Depresión', description: 'Síntomas depresivos en niños', icon: 'frown' },
-        ]);
-      } else {
-        const { data, error } = await supabase
-          .from('conditions')
-          .select('*')
-          .order('name');
+      const { data, error } = await supabase
+        .from('conditions')
+        .select('id, code, name_es, name_en, description_es, description_en, icon, color')
+        .eq('is_active', true)
+        .order('order_index');
 
-        if (error) throw error;
-        setConditions(data || []);
-      }
+      if (error) throw error;
+
+      const formattedConditions: Condition[] = (data || []).map((condition) => ({
+        id: condition.id,
+        name: language === 'es' ? condition.name_es : condition.name_en,
+        description: language === 'es' ? condition.description_es : condition.description_en,
+        icon: condition.icon || 'brain',
+        color: condition.color || 'blue',
+      }));
+
+      setConditions(formattedConditions);
     } catch (error) {
       console.error('Error loading conditions:', error);
     } finally {
@@ -111,13 +115,6 @@ export function ScreeningList() {
         </div>
       </div>
 
-      {guestMode && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-          <p className="text-sm text-yellow-800">
-            <strong>Modo Invitado:</strong> Estás viendo datos de ejemplo. Crea una cuenta para guardar tus evaluaciones.
-          </p>
-        </div>
-      )}
     </div>
   );
 }

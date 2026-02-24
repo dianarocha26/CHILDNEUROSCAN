@@ -1,106 +1,79 @@
-import { useState } from 'react';
-import { Info, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Info, ExternalLink, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface ConditionInfo {
   id: string;
   name: string;
   description: string;
-  symptoms: string[];
-  redFlags: string[];
-  resources: string[];
+  whatParentsSee: string[];
+  howToHelp: string[];
 }
 
-const conditionsData: ConditionInfo[] = [
-  {
-    id: 'autism',
-    name: 'Autismo (TEA)',
-    description: 'El Trastorno del Espectro Autista es una condición del neurodesarrollo que afecta la comunicación social y el comportamiento.',
-    symptoms: [
-      'Dificultad en la comunicación social',
-      'Patrones de comportamiento repetitivos',
-      'Intereses restringidos',
-      'Sensibilidad sensorial',
-    ],
-    redFlags: [
-      'No responde a su nombre a los 12 meses',
-      'Evita contacto visual',
-      'Retraso en el desarrollo del lenguaje',
-      'Movimientos repetitivos',
-    ],
-    resources: [
-      'Asociación de Autismo',
-      'Terapia ABA',
-      'Grupos de apoyo para padres',
-    ],
-  },
-  {
-    id: 'adhd',
-    name: 'TDAH',
-    description: 'Trastorno por Déficit de Atención e Hiperactividad caracterizado por inatención, hiperactividad e impulsividad.',
-    symptoms: [
-      'Dificultad para mantener la atención',
-      'Hiperactividad motora',
-      'Impulsividad',
-      'Dificultad para seguir instrucciones',
-    ],
-    redFlags: [
-      'No puede estar quieto',
-      'Interrumpe constantemente',
-      'Dificultad para esperar su turno',
-      'Olvida actividades diarias',
-    ],
-    resources: [
-      'Terapia conductual',
-      'Técnicas de organización',
-      'Apoyo escolar',
-    ],
-  },
-  {
-    id: 'speech-delay',
-    name: 'Retraso del Habla',
-    description: 'Desarrollo más lento de lo esperado en las habilidades del lenguaje y comunicación.',
-    symptoms: [
-      'Vocabulario limitado para su edad',
-      'Dificultad para formar oraciones',
-      'Problemas de pronunciación',
-      'Frustración al comunicarse',
-    ],
-    redFlags: [
-      'No dice palabras a los 15 meses',
-      'No usa frases a los 2 años',
-      'Difícil de entender a los 3 años',
-    ],
-    resources: [
-      'Terapia del lenguaje',
-      'Ejercicios en casa',
-      'Estimulación temprana',
-    ],
-  },
-  {
-    id: 'developmental-delay',
-    name: 'Retraso del Desarrollo',
-    description: 'Progreso más lento en alcanzar hitos del desarrollo en diferentes áreas.',
-    symptoms: [
-      'Retraso motor',
-      'Retraso cognitivo',
-      'Retraso social',
-      'Dificultades de aprendizaje',
-    ],
-    redFlags: [
-      'No se sienta a los 9 meses',
-      'No camina a los 18 meses',
-      'No juega con otros niños',
-    ],
-    resources: [
-      'Evaluación del desarrollo',
-      'Intervención temprana',
-      'Terapias múltiples',
-    ],
-  },
-];
-
 export function ConditionsList() {
+  const [conditions, setConditions] = useState<ConditionInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedCondition, setSelectedCondition] = useState<ConditionInfo | null>(null);
+  const [language] = useState<'es' | 'en'>('es');
+
+  useEffect(() => {
+    loadConditions();
+  }, []);
+
+  async function loadConditions() {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('conditions')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index');
+
+      if (error) throw error;
+
+      const formattedConditions: ConditionInfo[] = (data || []).map((condition) => ({
+        id: condition.id,
+        name: language === 'es' ? condition.name_es : condition.name_en,
+        description: language === 'es' ? condition.description_es : condition.description_en,
+        whatParentsSee: parseJsonField(language === 'es' ? condition.what_parents_see_es : condition.what_parents_see_en),
+        howToHelp: parseJsonField(language === 'es' ? condition.how_to_help_es : condition.how_to_help_en),
+      }));
+
+      setConditions(formattedConditions);
+    } catch (err) {
+      console.error('Error loading conditions:', err);
+      setError('Error al cargar las condiciones');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function parseJsonField(field: string | null): string[] {
+    if (!field) return [];
+    try {
+      const parsed = JSON.parse(field);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+        <p className="text-sm text-red-800">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -114,7 +87,7 @@ export function ConditionsList() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-3">
-            {conditionsData.map((condition) => (
+            {conditions.map((condition) => (
               <button
                 key={condition.id}
                 onClick={() => setSelectedCondition(condition)}
@@ -146,48 +119,38 @@ export function ConditionsList() {
                 <p className="text-gray-700 mb-6">{selectedCondition.description}</p>
 
                 <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                      Síntomas Comunes
-                    </h4>
-                    <ul className="space-y-1 ml-4">
-                      {selectedCondition.symptoms.map((symptom, index) => (
-                        <li key={index} className="text-sm text-gray-700">
-                          • {symptom}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  {selectedCondition.whatParentsSee.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        Qué observan los padres
+                      </h4>
+                      <ul className="space-y-1 ml-4">
+                        {selectedCondition.whatParentsSee.map((item, index) => (
+                          <li key={index} className="text-sm text-gray-700">
+                            • {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                      <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                      Señales de Alerta
-                    </h4>
-                    <ul className="space-y-1 ml-4">
-                      {selectedCondition.redFlags.map((flag, index) => (
-                        <li key={index} className="text-sm text-gray-700">
-                          • {flag}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                      Recursos y Apoyo
-                    </h4>
-                    <ul className="space-y-1 ml-4">
-                      {selectedCondition.resources.map((resource, index) => (
-                        <li key={index} className="text-sm text-gray-700 flex items-center gap-2">
-                          <ExternalLink className="w-3 h-3" />
-                          {resource}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  {selectedCondition.howToHelp.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        Cómo ayudar
+                      </h4>
+                      <ul className="space-y-1 ml-4">
+                        {selectedCondition.howToHelp.map((item, index) => (
+                          <li key={index} className="text-sm text-gray-700 flex items-center gap-2">
+                            <ExternalLink className="w-3 h-3" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-blue-200">
