@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, Clock, Check, ChevronRight, Edit2, Trash2, GripVertical } from 'lucide-react';
+import { Calendar, Plus, Clock, Check, ChevronRight, CreditCard as Edit2, Trash2, GripVertical } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useLoadingState } from '../hooks/useLoadingState';
