@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, Clock, Check, ChevronRight } from 'lucide-react';
+import { Calendar, Plus, Clock, Check, ChevronRight, Edit2, Trash2, GripVertical } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useLoadingState } from '../hooks/useLoadingState';
@@ -15,6 +15,7 @@ export default function VisualSchedule() {
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<string | null>(null);
   const [showActivityForm, setShowActivityForm] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
 
   const [scheduleForm, setScheduleForm] = useState({
     child_name: '',
@@ -125,24 +126,41 @@ export default function VisualSchedule() {
 
     if (!selectedSchedule) return;
 
-    const currentActivities = activities[selectedSchedule] || [];
-    const nextOrder = currentActivities.length + 1;
-
     try {
-      const { error } = await supabase.from('schedule_activities').insert({
-        schedule_id: selectedSchedule,
-        activity_order: nextOrder,
-        activity_name: activityForm.activity_name,
-        activity_description: activityForm.activity_description || null,
-        icon_name: activityForm.icon_name,
-        icon_color: activityForm.icon_color,
-        start_time: activityForm.start_time || null,
-        duration_minutes: activityForm.duration_minutes ? parseInt(activityForm.duration_minutes) : null
-      });
+      if (editingActivity) {
+        const { error } = await supabase
+          .from('schedule_activities')
+          .update({
+            activity_name: activityForm.activity_name,
+            activity_description: activityForm.activity_description || null,
+            icon_name: activityForm.icon_name,
+            icon_color: activityForm.icon_color,
+            start_time: activityForm.start_time || null,
+            duration_minutes: activityForm.duration_minutes ? parseInt(activityForm.duration_minutes) : null
+          })
+          .eq('id', editingActivity.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        const currentActivities = activities[selectedSchedule] || [];
+        const nextOrder = currentActivities.length + 1;
+
+        const { error } = await supabase.from('schedule_activities').insert({
+          schedule_id: selectedSchedule,
+          activity_order: nextOrder,
+          activity_name: activityForm.activity_name,
+          activity_description: activityForm.activity_description || null,
+          icon_name: activityForm.icon_name,
+          icon_color: activityForm.icon_color,
+          start_time: activityForm.start_time || null,
+          duration_minutes: activityForm.duration_minutes ? parseInt(activityForm.duration_minutes) : null
+        });
+
+        if (error) throw error;
+      }
 
       setShowActivityForm(false);
+      setEditingActivity(null);
       setActivityForm({
         activity_name: '',
         activity_description: '',
@@ -153,8 +171,8 @@ export default function VisualSchedule() {
       });
       loadData();
     } catch (error) {
-      logger.error('Error adding activity:', error);
-      alert('Failed to add activity');
+      logger.error('Error saving activity:', error);
+      alert('Failed to save activity');
     }
   };
 
@@ -209,6 +227,49 @@ export default function VisualSchedule() {
     } catch (error) {
       logger.error('Error resetting schedule:', error);
     }
+  };
+
+  const handleEditActivity = (activity: Activity) => {
+    setEditingActivity(activity);
+    setActivityForm({
+      activity_name: activity.activity_name,
+      activity_description: activity.activity_description || '',
+      icon_name: activity.icon_name,
+      icon_color: activity.icon_color,
+      start_time: activity.start_time || '',
+      duration_minutes: activity.duration_minutes?.toString() || '30'
+    });
+    setShowActivityForm(true);
+  };
+
+  const handleDeleteActivity = async (activityId: string) => {
+    if (!confirm('Are you sure you want to delete this activity?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('schedule_activities')
+        .delete()
+        .eq('id', activityId);
+
+      if (error) throw error;
+      loadData();
+    } catch (error) {
+      logger.error('Error deleting activity:', error);
+      alert('Failed to delete activity');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowActivityForm(false);
+    setEditingActivity(null);
+    setActivityForm({
+      activity_name: '',
+      activity_description: '',
+      icon_name: 'Circle',
+      icon_color: '#3B82F6',
+      start_time: '',
+      duration_minutes: '30'
+    });
   };
 
   const currentSchedule = schedules.find(s => s.id === selectedSchedule);
@@ -363,7 +424,9 @@ export default function VisualSchedule() {
 
                 {showActivityForm && (
                   <div className="mb-6 p-4 border-2 border-blue-200 rounded-lg bg-blue-50">
-                    <h3 className="font-bold text-gray-900 mb-4">Add Custom Activity</h3>
+                    <h3 className="font-bold text-gray-900 mb-4">
+                      {editingActivity ? 'Edit Activity' : 'Add Custom Activity'}
+                    </h3>
                     <form onSubmit={handleActivitySubmit} className="space-y-3">
                       <input
                         type="text"
@@ -371,6 +434,13 @@ export default function VisualSchedule() {
                         value={activityForm.activity_name}
                         onChange={(e) => setActivityForm({ ...activityForm, activity_name: e.target.value })}
                         placeholder="Activity name"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                      <textarea
+                        value={activityForm.activity_description}
+                        onChange={(e) => setActivityForm({ ...activityForm, activity_description: e.target.value })}
+                        placeholder="Description (optional)"
+                        rows={2}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       />
                       <div className="grid grid-cols-2 gap-3">
@@ -389,13 +459,22 @@ export default function VisualSchedule() {
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Icon Color</label>
+                        <input
+                          type="color"
+                          value={activityForm.icon_color}
+                          onChange={(e) => setActivityForm({ ...activityForm, icon_color: e.target.value })}
+                          className="w-full h-10 rounded-lg border border-gray-300 cursor-pointer"
+                        />
+                      </div>
                       <div className="flex gap-2">
                         <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
-                          Add
+                          {editingActivity ? 'Save Changes' : 'Add Activity'}
                         </button>
                         <button
                           type="button"
-                          onClick={() => setShowActivityForm(false)}
+                          onClick={handleCancelEdit}
                           className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition"
                         >
                           Cancel
@@ -415,6 +494,8 @@ export default function VisualSchedule() {
                           : 'bg-gray-50 border-gray-200 hover:border-blue-300'
                       }`}
                     >
+                      <GripVertical className="w-5 h-5 text-gray-400 cursor-move flex-shrink-0" />
+
                       <button
                         onClick={() => toggleActivityCompletion(activity.id, activity.is_completed)}
                         className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition ${
@@ -453,7 +534,22 @@ export default function VisualSchedule() {
                         </div>
                       </div>
 
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => handleEditActivity(activity)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                          title="Edit activity"
+                        >
+                          <Edit2 className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteActivity(activity.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                          title="Delete activity"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
                   ))}
 
