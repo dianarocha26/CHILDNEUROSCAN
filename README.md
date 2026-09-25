@@ -1,3 +1,8 @@
+> [!WARNING]
+> **This repository is no longer used.** The live app (deployed on Vercel) is built from
+> **[dianarocha26/child-neuroscan](https://github.com/dianarocha26/child-neuroscan)**.
+> Do all work there. This repo will be archived.
+
 # ChildNeuroScan 🧠
 
 **A comprehensive child development screening and tracking application**
